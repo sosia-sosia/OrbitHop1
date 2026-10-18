@@ -7,8 +7,8 @@
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#0d1020;--ink:#f2efe6;--dim:#9aa0bd;--acc:#ffb74a}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-html,body{height:100%;margin:0;background:#0d1020;color:var(--ink);font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Yu Gothic",sans-serif;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
-canvas{display:block;width:100%;height:100%}
+html,body{height:100%;margin:0;background:#05060d;color:var(--ink);font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Yu Gothic",sans-serif;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+canvas{position:fixed;top:0;display:block;box-shadow:0 0 40px rgba(0,0,0,.6)}
 #hud{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:0;right:0;text-align:center;pointer-events:none}
 #score{font-size:56px;font-weight:900;line-height:1}
 #best{font-size:13px;color:var(--dim)}
@@ -21,7 +21,7 @@ canvas{display:block;width:100%;height:100%}
 #grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;max-width:320px;width:100%}
 .st{font:inherit;font-size:22px;font-weight:900;border:0;border-radius:14px;padding:10px 0;background:#242a52;color:var(--ink)}
 .st small{display:block;font-size:11px;color:var(--acc)}.st.lock{opacity:.4}
-#menu{font:inherit;font-size:15px;background:none;color:var(--dim);border:1px solid var(--dim);border-radius:30px;padding:8px 26px}
+#menu,#snd{font:inherit;font-size:15px;background:none;color:var(--dim);border:1px solid var(--dim);border-radius:30px;padding:8px 26px}
 .hide{display:none!important}
 </style>
 </head>
@@ -34,12 +34,13 @@ canvas{display:block;width:100%;height:100%}
   <div id="grid" class="hide"></div>
   <button id="go" class="hide"></button>
   <button id="menu" class="hide">ステージ選択</button>
+  <button id="snd" class="hide">♪ BGM ON</button>
 </div>
 <script>
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 const $=id=>document.getElementById(id);
 let W,H,dpr;
-function resize(){dpr=window.devicePixelRatio||1;W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}
+function resize(){dpr=window.devicePixelRatio||1;H=innerHeight;W=Math.min(innerWidth,430,Math.round(H*.56));cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);const l=Math.round((innerWidth-W)/2);cv.style.width=W+'px';cv.style.height=H+'px';cv.style.left=l+'px';for(const id of['ov','hud']){const e=document.getElementById(id);e.style.left=l+'px';e.style.right='auto';e.style.width=W+'px'}}
 addEventListener('resize',resize);resize();
 
 const NS=10;
@@ -95,7 +96,11 @@ function prep(i){
   P={x:pl[0].x,y:pl[0].y+orbR,vx:0,vy:0,orbit:true};
   camY=-H*0.65/Z;
 }
-function start(i){prep(i);state='play';$('ov').classList.add('hide');$('hud').classList.remove('hide')}
+const BGM_SRC='ginganoren.mp3'; // HTMLと同じフォルダに置く
+let bgm=null,bgmOn=true;
+if(BGM_SRC){bgm=new Audio(BGM_SRC);bgm.loop=true;bgm.volume=.4;bgm.preload='auto';bgm.addEventListener('canplay',()=>$('snd').classList.remove('hide'));$('snd').onclick=e=>{e.stopPropagation();bgmOn=!bgmOn;$('snd').textContent='♪ BGM '+(bgmOn?'ON':'OFF');bgmOn?bgmPlay():bgm.pause()}}
+function bgmPlay(){if(bgm&&bgmOn)bgm.play().catch(()=>{})}
+function start(i){prep(i);bgmPlay();state='play';$('ov').classList.add('hide');$('hud').classList.remove('hide')}
 function hud(){
   $('score').textContent='ステージ '+stage;
   $('combo').textContent='ジャンプ '+score+'　★3は'+(par+1)+'回以内';
