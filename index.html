@@ -46,7 +46,7 @@ addEventListener('resize',resize);resize();
 const NS=10;
 // 画像スロット: 各キーにdata URI(base64)を入れると、その画像が使われます。空なら標準の描画。
 const IMG={};
-const ASSETS={player:'',bg:'',goal:'',normal:'',fast:'',slow:'',pulse:'',mover:'',boost:'',reverse:'',small:'',rock:''};
+const ASSETS={player:'Gplayer.png',bg:'Gbg.png',goal:'Ggoal.png',normal:'Gnormal.png',fast:'Gfast.png',slow:'Gslow.png',pulse:'Gpulse.png',mover:'Gmover.png',boost:'Gboost.png',reverse:'Greverse.png',small:'Gsmall.png',rock:'Grock.png'};
 for(const k in ASSETS)if(ASSETS[k]){const i=new Image();i.onload=()=>{IMG[k]=i};i.src=ASSETS[k]}
 const TY={normal:{},fast:{h:5,g:'≫'},slow:{h:210,g:'…'},pulse:{h:280,g:'〜'},mover:{h:150,g:'↔'},boost:{h:50,g:'⚡'},reverse:{h:320,g:'⇄'},small:{h:190,g:'小'}};
 function pick(i){
@@ -54,12 +54,13 @@ function pick(i){
   const a=['fast','slow'];if(i>=3)a.push('pulse','reverse');if(i>=4)a.push('mover');if(i>=5)a.push('boost');if(i>=6)a.push('small');
   return a[Math.floor(rng()*a.length)];
 }
+function pulseScale(t){const u=t%.5;return u<.25?1-.4*u:u<.4?.9+(u-.25)/.15*.2:1.1-(u-.4)/.1*.1}
 function spd(q){const t=q.type;return t==='fast'?1.8:t==='slow'?.55:t==='pulse'?1+.6*Math.sin(clock*2.2):1}
 function drawBg(){const im=IMG.bg,th=W*im.naturalHeight/im.naturalWidth,off=((-camY*.15)%th+th)%th;for(let y=off-th;y<H;y+=th)ctx.drawImage(im,0,y,W,th+1)}
 function drawPlanet(q){
   const im=IMG[q.type];
   if(q.amp){ctx.beginPath();ctx.moveTo(q.bx-q.amp,q.y);ctx.lineTo(q.bx+q.amp,q.y);ctx.strokeStyle='rgba(154,160,189,.25)';ctx.lineWidth=1;ctx.stroke()}
-  if(im)ctx.drawImage(im,q.x-q.r,q.y-q.r,q.r*2,q.r*2);
+  if(im){ctx.shadowColor='rgba(255,255,255,.95)';ctx.shadowBlur=7;ctx.drawImage(im,q.x-q.r,q.y-q.r,q.r*2,q.r*2);ctx.drawImage(im,q.x-q.r,q.y-q.r,q.r*2,q.r*2);ctx.shadowBlur=0}
   else{
     const gr=ctx.createRadialGradient(q.x-q.r*.35,q.y-q.r*.35,q.r*.1,q.x,q.y,q.r);
     gr.addColorStop(0,`hsl(${q.h},75%,72%)`);gr.addColorStop(1,`hsl(${q.h+30},60%,38%)`);
@@ -76,25 +77,25 @@ let seed=1;
 function rng(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}
 const rnd=(a,b)=>a+rng()*(b-a);
 
-let Z=1,relAng=0,rings=[],parts=[],texts=[],par=1,P={x:0,y:0},pl,items,cur,ang,dir,orbR,state='menu',camY=0,score,trail=[],ignore,shake=0,energy,got,total,N,stage=1,clock=0,goAct;
+let meteors=[],spawnT=2,scrollV=30,scrolling=false,Z=1,relAng=0,rings=[],parts=[],texts=[],par=1,P={x:0,y:0},pl,items,cur,ang,dir,orbR,state='menu',camY=0,score,trail=[],ignore,shake=0,energy,got,total,N,stage=1,clock=0,goAct;
 
 function zone(q){return q.r+Math.max(36,56-stage*2)}
 function prep(i){
   stage=i;seed=i*7919+13;N=6+i*2;par=Math.ceil(N/2);
-  Z=Math.max(.65,1-(i-1)*.035);
-  const WW=W/Z,cx=W/2,sx=Math.min(WW/2-85,W/2-25),jit=25+i*3,rp=i<4?0:Math.min(.08*(i-3),.5);
+  Z=Math.max(.65,1-(i-1)*.035);scrollV=24+4*i;scrolling=false;meteors=[];spawnT=2.5;
+  const WW=W/Z,cx=W/2,sx=Math.min(WW/2-85,W/2-25),jit=25+i*3,rp=i<2?0:Math.min(.12*(i-1),.7);
   pl=[{type:'normal',bx:cx-sx,x:cx-sx,amp:0,ph:0,y:0,r:24,h:35}];items=[];
   for(let k=1;k<=N;k++){
     const lp=pl[k-1],side=k%2?1:-1;
     const ty=pick(i),amp=ty==='mover'?rnd(30,55):0;
     const bx=Math.max(cx-WW/2+50+amp,Math.min(cx+WW/2-50-amp,cx+side*sx+rnd(-jit,jit)));
     pl.push({type:ty,bx,x:bx,amp,ph:rnd(0,6),y:lp.y-rnd(120,170),r:ty==='small'?rnd(10,13):rnd(16,28),h:ty==='normal'?rnd(0,360):TY[ty].h});
-    if(rng()<rp){const t=rnd(.4,.6),ox=rnd(-30,30);items.push({t:'r',x:lp.x+(bx-lp.x)*t+ox,y:lp.y+(pl[k].y-lp.y)*t,r:rnd(24,36)})}
+    if(rng()<rp){const t=rnd(.4,.6),rx=lp.x+(bx-lp.x)*t+rnd(-30,30);items.push({t:'r',bx:rx,x:rx,y:lp.y+(pl[k].y-lp.y)*t,r:rnd(24,36),amp:i>=3&&rng()<.4?rnd(30,60):0,ph:rnd(0,6)})}
   }
   pl[N].goal=true;pl[N].type='goal';pl[N].amp=0;pl[N].x=pl[N].bx;pl[N].r=30;pl[N].h=48;
   cur=0;ang=Math.PI/2;dir=1;orbR=pl[0].r+30;score=0;trail=[];ignore=0;
   P={x:pl[0].x,y:pl[0].y+orbR,vx:0,vy:0,orbit:true};
-  camY=-H*0.65/Z;
+  camY=-H*0.78/Z;
 }
 const BGM_SRC='ginganoren.mp3'; // HTMLと同じフォルダに置く
 let bgm=null,bgmOn=true;
@@ -104,7 +105,7 @@ function start(i){prep(i);bgmPlay();state='play';$('ov').classList.add('hide');$
 function hud(){
   $('score').textContent='ステージ '+stage;
   $('combo').textContent='ジャンプ '+score+'　★3は'+(par+1)+'回以内';
-  $('hint').textContent=[['≫','高速',2],['…','低速',2],['〜','変速',3],['↔','移動',4],['⇄','逆回転',3],['⚡','加速',5],['小','小型',6],['岩','隕石',4]].filter(a=>stage>=a[2]).map(a=>a[0]+a[1]).join('　');
+  $('hint').textContent=[['≫','高速',2],['…','低速',2],['〜','変速',3],['↔','移動',4],['⇄','逆回転',3],['⚡','加速',5],['小','小型',6],['岩','隕石',2],['☄','流れ星',2]].filter(a=>stage>=a[2]).map(a=>a[0]+a[1]).join('　');
 }
 function omega(){return 2.2+stage*0.12}
 let AC;
@@ -129,12 +130,12 @@ function release(){
   if(state!=='play'||!P.orbit)return;
   const sp=pl[cur].type==='boost'?640:400;
   P.vx=-Math.sin(ang)*dir*sp;P.vy=Math.cos(ang)*dir*sp;
-  P.orbit=false;ignore=0.25;score++;relAng=Math.atan2(P.vy,P.vx);blip(520,.06);vib(8);
+  P.orbit=false;ignore=0.25;score++;scrolling=true;relAng=Math.atan2(P.vy,P.vx);blip(520,.06);vib(8);
 }
 function showMenu(){
   state='menu';
   $('t').textContent='オービット・ホップ';
-  $('d').textContent='少ないジャンプ回数で、金色のゴール惑星へ。飛行中は惑星の引力で軌道が曲がります。曲がりを使って惑星を飛ばすほど高評価です。';
+  $('d').textContent='ゴールは上。最初の1回を飛ぶと画面が上へ流れ始めます。取り残される、または画面外へ出ると失敗。流れ星と隕石をよけ、少ないジャンプ回数を目指そう。';
   $('go').classList.add('hide');$('menu').classList.add('hide');
   const g=$('grid');g.classList.remove('hide');g.innerHTML='';
   let un=1;for(let i=1;i<=NS;i++)if(prog[i])un=i+1;
@@ -171,7 +172,20 @@ function loop(now){
 function update(dt){
   clock+=dt;
   for(const q of pl)if(q.amp)q.x=q.bx+Math.sin(clock*.9+q.ph)*q.amp;
+  for(const m of items)if(m.amp)m.x=m.bx+Math.sin(clock*1.1+m.ph)*m.amp;
   const c=pl[cur];
+  if(state==='play'&&scrolling){
+    camY-=scrollV*dt;spawnT-=dt;
+    if(stage>=2&&spawnT<=0){
+      spawnT=Math.max(1.8,5-.3*stage)*(.7+Math.random()*.6);
+      meteors.push({x:W/2+(Math.random()-.5)*(W/Z-80),y:camY,vx:(Math.random()-.5)*100,vy:130+stage*6+Math.random()*40,w:1,aim:false});
+    }
+    for(const m of meteors){
+      if(m.w>0){m.w-=dt;m.y=camY+10/Z;if(m.aim){const t=Math.max(.3,(P.y-m.y)/m.vy);m.vx=Math.max(-220,Math.min(220,(P.x-m.x)/t))}}
+      else{m.x+=m.vx*dt;m.y+=m.vy*dt;if(Math.hypot(P.x-m.x,P.y-m.y)<13)finish(false,'流れ星に衝突')}
+    }
+    meteors=meteors.filter(m=>(m.y-camY)*Z<H+80&&Math.abs(m.x-W/2)<W/Z);
+  }
   if(state==='play'){
     if(P.orbit){
       ang+=dir*omega()*spd(c)*dt;
@@ -194,14 +208,12 @@ function update(dt){
       const sy=(P.y-camY)*Z;
       if(state==='play'&&!P.orbit&&(sy>H+60||sy<-30||Math.abs(P.x-W/2)>W/(2*Z)+30))finish(false,'宇宙の果てへ飛んでいった');
     }
-    if(state==='play'){trail.push({x:P.x,y:P.y});if(trail.length>26)trail.shift();if(!P.orbit)for(const m of items)if(Math.hypot(P.x-m.x,P.y-m.y)<m.r+6){finish(false,'隕石に衝突');break}}
+    if(state==='play'){trail.push({x:P.x,y:P.y});if(trail.length>26)trail.shift();if((P.y-camY)*Z>H-8){finish(false,'画面の下に取り残された')}else if(!P.orbit)for(const m of items)if(Math.hypot(P.x-m.x,P.y-m.y)<m.r+6){finish(false,'隕石に衝突');break}}
   }
   for(const r of rings){r.life-=dt*1.8;r.r+=dt*140}rings=rings.filter(r=>r.life>0);
   for(const p of parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt*1.6}parts=parts.filter(p=>p.life>0);
   for(const t of texts){t.life-=dt;t.y-=dt*20}texts=texts.filter(t=>t.life>0);
   hud();
-  const target=pl[cur].y-H*0.65/Z;
-  camY+=(target-camY)*Math.min(1,dt*4);
   if(shake>0)shake-=dt;
 }
 function draw(){
@@ -226,7 +238,7 @@ function draw(){
     ctx.strokeStyle=isNext?'rgba(255,183,74,.45)':'rgba(154,160,189,.12)';
     ctx.lineWidth=isNext?2:1;ctx.setLineDash([4,7]);ctx.stroke();ctx.setLineDash([]);
     if(i===cur){ctx.beginPath();ctx.arc(q.x,q.y,q.r+30,0,7);ctx.strokeStyle='rgba(242,239,230,.25)';ctx.lineWidth=1.5;ctx.stroke()}
-    drawPlanet(q);
+    {const sc=pulseScale(clock);ctx.save();ctx.translate(q.x,q.y);ctx.scale(sc,sc);ctx.translate(-q.x,-q.y);drawPlanet(q);ctx.restore()}
     if(q.goal){
       ctx.beginPath();ctx.arc(q.x,q.y,q.r+8,0,7);ctx.strokeStyle='#ffe066';ctx.lineWidth=3;ctx.stroke();
       ctx.fillStyle='#ffe066';ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillText('ゴール',q.x,q.y-q.r-64);
@@ -237,6 +249,10 @@ function draw(){
     if(IMG.rock)ctx.drawImage(IMG.rock,m.x-m.r,m.y-m.r,m.r*2,m.r*2);
     else{ctx.beginPath();ctx.arc(m.x,m.y,m.r,0,7);ctx.fillStyle='#6b6f86';ctx.fill();ctx.strokeStyle='#9aa0bd';ctx.lineWidth=2;ctx.stroke();
       ctx.beginPath();ctx.moveTo(m.x-m.r*.5,m.y-m.r*.2);ctx.lineTo(m.x,m.y+m.r*.1);ctx.lineTo(m.x+m.r*.4,m.y-m.r*.4);ctx.stroke()}
+  }
+  for(const m of meteors){
+    if(m.w>0){const a=.4+.4*Math.sin(clock*18);ctx.strokeStyle=`rgba(255,90,90,${a})`;ctx.lineWidth=2;ctx.setLineDash([6,8]);ctx.beginPath();ctx.moveTo(m.x,m.y);ctx.lineTo(m.x+m.vx/m.vy*600,m.y+600);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=`rgba(255,90,90,${a+.3})`;ctx.font='900 22px sans-serif';ctx.textAlign='center';ctx.fillText('!',m.x,m.y+26)}
+    else{const L=Math.hypot(m.vx,m.vy),tx=-m.vx/L*60,ty=-m.vy/L*60,g=ctx.createLinearGradient(m.x,m.y,m.x+tx,m.y+ty);g.addColorStop(0,'rgba(255,240,200,.9)');g.addColorStop(1,'rgba(255,160,60,0)');ctx.strokeStyle=g;ctx.lineWidth=7;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(m.x,m.y);ctx.lineTo(m.x+tx,m.y+ty);ctx.stroke();if(IMG.rock){ctx.save();ctx.translate(m.x,m.y);ctx.rotate(clock*3);ctx.drawImage(IMG.rock,-15,-15,30,30);ctx.restore()}else{ctx.beginPath();ctx.arc(m.x,m.y,7,0,7);ctx.fillStyle='#fff6dc';ctx.fill()}}
   }
   for(const r of rings){ctx.beginPath();ctx.arc(r.x,r.y,r.r,0,7);ctx.strokeStyle=`rgba(255,246,220,${r.life*.7})`;ctx.lineWidth=3;ctx.stroke()}
   for(const p of parts){ctx.fillStyle=`hsla(${p.h},90%,75%,${p.life})`;ctx.fillRect(p.x-2,p.y-2,4,4)}
@@ -249,7 +265,7 @@ function draw(){
     ctx.fillStyle=`rgba(255,183,74,${a*0.5})`;ctx.fill();
   }
   if(state==='play'||state==='clear'){
-    if(IMG.player)ctx.drawImage(IMG.player,P.x-16,P.y-16,32,32);
+    if(IMG.player){const hx=P.orbit?-Math.sin(ang)*dir:P.vx,hy=P.orbit?Math.cos(ang)*dir:P.vy;ctx.save();ctx.translate(P.x,P.y);ctx.rotate(Math.atan2(hy,hx)+Math.PI/2);ctx.shadowColor='rgba(255,255,255,.95)';ctx.shadowBlur=7;ctx.drawImage(IMG.player,-16,-16,32,32);ctx.drawImage(IMG.player,-16,-16,32,32);ctx.shadowBlur=0;ctx.restore()}
     else{ctx.beginPath();ctx.arc(P.x,P.y,7,0,7);ctx.fillStyle='#fff6dc';
     ctx.shadowColor='#ffb74a';ctx.shadowBlur=16;ctx.fill();ctx.shadowBlur=0}
     if(P.orbit&&state==='play'){
@@ -259,6 +275,7 @@ function draw(){
     }
   }
   ctx.restore();
+  if(state==='play'&&scrolling){const sy=(P.y-camY)*Z;if(sy>H-150){const a=Math.min(.6,(sy-(H-150))/150),g2=ctx.createLinearGradient(0,H-120,0,H);g2.addColorStop(0,'rgba(255,60,60,0)');g2.addColorStop(1,`rgba(255,60,60,${a})`);ctx.fillStyle=g2;ctx.fillRect(0,H-120,W,120)}}
 }
 prep(1);showMenu();
 requestAnimationFrame(loop);
