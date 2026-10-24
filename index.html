@@ -12,22 +12,32 @@ canvas{position:fixed;top:0;display:block;box-shadow:0 0 40px rgba(0,0,0,.6)}
 #hud{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:0;right:0;text-align:center;pointer-events:none}
 #score{font-size:56px;font-weight:900;line-height:1}
 #best{font-size:13px;color:var(--dim)}
-#ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(13,16,32,.72);text-align:center;padding:24px}
+#ov{box-sizing:border-box;position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(13,16,32,.72);text-align:center;padding:24px}
 #ov h1{margin:0;font-size:38px;font-weight:900;letter-spacing:.04em}
 #ov p{margin:0;color:var(--dim);font-size:15px;line-height:1.7;max-width:300px}
-#go{font:inherit;font-size:20px;font-weight:900;background:var(--acc);color:#2a1a00;border:0;border-radius:40px;padding:14px 44px}
+#go,#startbtn{font:inherit;font-size:20px;font-weight:900;background:var(--acc);color:#2a1a00;border:0;border-radius:40px;padding:14px 44px}
 #barw{width:200px;height:8px;border-radius:4px;background:rgba(255,255,255,.12);margin:8px auto 4px;overflow:hidden}#bar{height:100%;width:100%;background:#ffb74a}#hint{font-size:11px;color:var(--dim);height:14px;margin-top:2px}
 #combo{height:18px;color:#ffe066;font-weight:900;font-size:14px}
 #grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;max-width:320px;width:100%}
 .st{font:inherit;font-size:22px;font-weight:900;border:0;border-radius:14px;padding:10px 0;background:#242a52;color:var(--ink)}
 .st small{display:block;font-size:11px;color:var(--acc)}.st.lock{opacity:.4}
 #menu,#snd{font:inherit;font-size:15px;background:none;color:var(--dim);border:1px solid var(--dim);border-radius:30px;padding:8px 26px}
+.scr{box-sizing:border-box;position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+#logo{background:#0d1020}
+#lgt{font-size:40px;font-weight:900;letter-spacing:.12em}
+#tap{position:absolute;bottom:16%;color:var(--dim);font-size:14px;animation:bl 1.2s infinite}
+@keyframes bl{50%{opacity:.25}}
+#title{justify-content:space-between;background:rgba(13,16,32,.55);padding-top:30%;padding-bottom:14%}
+#title h1{margin:0 0 10px;font-size:40px;font-weight:900;letter-spacing:.04em}
+#title p{margin:0;color:var(--dim)}
 .hide{display:none!important}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <div id="hud" class="hide"><div id="score"></div><div id="combo"></div><div id="hint"></div></div>
+<div id="logo" class="scr"><img id="lg" src="Glogo.png" alt="" onload="document.getElementById('lgt').classList.add('hide')" onerror="this.remove()" style="max-width:70%;max-height:50%"><div id="lgt">ORBIT HOP</div><div id="tap" class="hide">タップして進む</div></div>
+<div id="title" class="scr hide"><div><img id="ti" src="Gtitle.png" alt="" onload="document.getElementById('tit').classList.add('hide')" onerror="this.remove()" style="max-width:80%;max-height:45vh"><div id="tit"><h1>オービット・ホップ</h1><p>惑星をわたって、ゴールをめざせ</p></div></div><button id="startbtn">スタート</button></div>
 <div id="ov">
   <h1 id="t"></h1>
   <p id="d"></p>
@@ -40,7 +50,7 @@ canvas{position:fixed;top:0;display:block;box-shadow:0 0 40px rgba(0,0,0,.6)}
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 const $=id=>document.getElementById(id);
 let W,H,dpr;
-function resize(){dpr=window.devicePixelRatio||1;H=innerHeight;W=Math.min(innerWidth,430,Math.round(H*.56));cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);const l=Math.round((innerWidth-W)/2);cv.style.width=W+'px';cv.style.height=H+'px';cv.style.left=l+'px';for(const id of['ov','hud']){const e=document.getElementById(id);e.style.left=l+'px';e.style.right='auto';e.style.width=W+'px'}}
+function resize(){dpr=window.devicePixelRatio||1;H=innerHeight;W=Math.min(innerWidth,430,Math.round(H*.56));cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);const l=Math.round((innerWidth-W)/2);cv.style.width=W+'px';cv.style.height=H+'px';cv.style.left=l+'px';for(const id of['ov','hud','logo','title']){const e=document.getElementById(id);e.style.left=l+'px';e.style.right='auto';e.style.width=W+'px'}}
 addEventListener('resize',resize);resize();
 
 const NS=10;
@@ -82,7 +92,7 @@ let meteors=[],spawnT=2,scrollV=30,scrolling=false,Z=1,relAng=0,rings=[],parts=[
 function zone(q){return q.r+Math.max(36,56-stage*2)}
 function prep(i){
   stage=i;seed=i*7919+13;N=6+i*2;par=Math.ceil(N/2);
-  Z=Math.max(.65,1-(i-1)*.035);scrollV=24+4*i;scrolling=false;meteors=[];spawnT=2.5;
+  Z=Math.max(.65,1-(i-1)*.035);scrollV=(24+4*i)*1.2;scrolling=false;meteors=[];spawnT=2.5;
   const WW=W/Z,cx=W/2,sx=Math.min(WW/2-85,W/2-25),jit=25+i*3,rp=i<2?0:Math.min(.12*(i-1),.7);
   pl=[{type:'normal',bx:cx-sx,x:cx-sx,amp:0,ph:0,y:0,r:24,h:35}];items=[];
   for(let k=1;k<=N;k++){
@@ -111,7 +121,7 @@ function omega(){return 2.2+stage*0.12}
 let AC;
 function blip(f,d){try{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.12,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
 function vib(n){try{navigator.vibrate&&navigator.vibrate(n)}catch(e){}}
-function acc(x,y){let ax=0,ay=0;for(let i=0;i<pl.length;i++){if(i===cur)continue;const q=pl[i],dx=q.x-x,dy=q.y-y,d2=dx*dx+dy*dy+900,d=Math.sqrt(d2),a=12000*q.r*q.r/d2;ax+=dx/d*a;ay+=dy/d*a}return[ax,ay]}
+function acc(x,y){let ax=0,ay=0;for(let i=0;i<pl.length;i++){if(i===cur)continue;const q=pl[i],dx=q.x-x,dy=q.y-y,d2=dx*dx+dy*dy+900,d=Math.sqrt(d2),a=0;ax+=dx/d*a;ay+=dy/d*a}return[ax,ay]}
 function celebrate(q,skip,bend){
   rings.push({x:q.x,y:q.y,r:q.r,life:1});
   for(let k=0;k<14;k++){const a=Math.random()*6.28,sp=60+Math.random()*120;parts.push({x:P.x,y:P.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,h:q.h})}
@@ -194,10 +204,10 @@ function update(dt){
     }else{
       {const [ax,ay]=acc(P.x,P.y);P.vx+=ax*dt;P.vy+=ay*dt}
       P.x+=P.vx*dt;P.y+=P.vy*dt;ignore-=dt;
-      for(let i=cur+1;i<pl.length;i++){
+      for(let i=0;i<pl.length;i++){if(i===cur&&ignore>0)continue;
         const q=pl[i],dx=P.x-q.x,dy=P.y-q.y,d=Math.hypot(dx,dy);
         if(d<zone(q)&&(q.y-camY)*Z>10&&Math.abs(q.x-W/2)<W/(2*Z)-5){
-          {const va=Math.atan2(P.vy,P.vx),df=va-relAng,bend=Math.abs(Math.atan2(Math.sin(df),Math.cos(df)));celebrate(q,i-cur-1,bend)}
+          {const va=Math.atan2(P.vy,P.vx),df=va-relAng,bend=Math.abs(Math.atan2(Math.sin(df),Math.cos(df)));celebrate(q,Math.max(0,i-cur-1),bend)}
           cur=i;ang=Math.atan2(dy,dx);
           dir=(dx*P.vy-dy*P.vx)>0?1:-1;if(q.type==='reverse')dir=-dir;
           orbR=d;P.orbit=true;
@@ -277,7 +287,11 @@ function draw(){
   ctx.restore();
   if(state==='play'&&scrolling){const sy=(P.y-camY)*Z;if(sy>H-150){const a=Math.min(.6,(sy-(H-150))/150),g2=ctx.createLinearGradient(0,H-120,0,H);g2.addColorStop(0,'rgba(255,60,60,0)');g2.addColorStop(1,`rgba(255,60,60,${a})`);ctx.fillStyle=g2;ctx.fillRect(0,H-120,W,120)}}
 }
-prep(1);showMenu();
+prep(1);state='logo';$('ov').classList.add('hide');$('hud').classList.add('hide');
+let logoReady=false;
+setTimeout(()=>{logoReady=true;$('tap').classList.remove('hide')},1000);
+$('logo').addEventListener('click',()=>{if(!logoReady)return;bgmPlay();$('logo').classList.add('hide');$('title').classList.remove('hide');state='title'});
+$('startbtn').addEventListener('click',()=>{$('title').classList.add('hide');showMenu()});
 requestAnimationFrame(loop);
 </script>
 </body>
