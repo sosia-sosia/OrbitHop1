@@ -36,8 +36,8 @@ canvas{position:fixed;top:0;display:block;box-shadow:0 0 40px rgba(0,0,0,.6)}
 <body>
 <canvas id="c"></canvas>
 <div id="hud" class="hide"><div id="score"></div><div id="combo"></div><div id="hint"></div></div>
-<div id="logo" class="scr"><img id="lg" src="Glogo.png" alt="" onload="document.getElementById('lgt').classList.add('hide')" onerror="this.remove()" style="max-width:70%;max-height:50%"><div id="lgt">ORBIT HOP</div><div id="tap" class="hide">タップして進む</div></div>
-<div id="title" class="scr hide"><div><img id="ti" src="Gtitle.png" alt="" onload="document.getElementById('tit').classList.add('hide')" onerror="this.remove()" style="max-width:80%;max-height:45vh"><div id="tit"><h1>オービット・ホップ</h1><p>惑星をわたって、ゴールをめざせ</p></div></div><button id="startbtn">スタート</button></div>
+<div id="logo" class="scr"><img id="lg" src="Glogo.png" alt="" style="visibility:hidden;max-width:70%;max-height:50%" onload="this.style.visibility='visible'" onerror="this.remove();document.getElementById('lgt').classList.remove('hide')"><div id="lgt" class="hide">ORBIT HOP</div><div id="tap" class="hide">タップして進む</div></div>
+<div id="title" class="scr hide"><div style="width:100%"><img id="ti" src="Gtitle.png" alt="" style="visibility:hidden;width:100%;max-height:50vh;object-fit:contain" onload="this.style.visibility='visible'" onerror="this.remove();document.getElementById('tit').classList.remove('hide')"><div id="tit" class="hide"><h1>オービット・ホップ</h1><p>惑星をわたって、ゴールをめざせ</p></div></div><button id="startbtn">スタート</button></div>
 <div id="ov">
   <h1 id="t"></h1>
   <p id="d"></p>
