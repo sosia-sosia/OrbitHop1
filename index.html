@@ -36,7 +36,7 @@ canvas{position:fixed;top:0;display:block;box-shadow:0 0 40px rgba(0,0,0,.6)}
 <body>
 <canvas id="c"></canvas>
 <div id="hud" class="hide"><div id="score"></div><div id="combo"></div><div id="hint"></div></div>
-<div id="logo" class="scr"><img id="lg" src="Glogo.png" alt="" style="visibility:hidden;max-width:70%;max-height:50%" onload="this.style.visibility='visible'" onerror="this.remove();document.getElementById('lgt').classList.remove('hide')"><div id="lgt" class="hide">ORBIT HOP</div><div id="tap" class="hide">タップして進む</div></div>
+<div id="logo" class="scr"><img id="lg" src="Glogo.png" alt="" style="visibility:hidden;width:100%;max-height:50%;object-fit:contain" onload="this.style.visibility='visible'" onerror="this.remove();document.getElementById('lgt').classList.remove('hide')"><div id="lgt" class="hide">ORBIT HOP</div><div id="tap" class="hide">タップして進む</div></div>
 <div id="title" class="scr hide"><div style="width:100%"><img id="ti" src="Gtitle.png" alt="" style="visibility:hidden;width:100%;max-height:50vh;object-fit:contain" onload="this.style.visibility='visible'" onerror="this.remove();document.getElementById('tit').classList.remove('hide')"><div id="tit" class="hide"><h1>オービット・ホップ</h1><p>惑星をわたって、ゴールをめざせ</p></div></div><button id="startbtn">スタート</button></div>
 <div id="ov">
   <h1 id="t"></h1>
@@ -118,6 +118,9 @@ function hud(){
   $('hint').textContent=[['≫','高速',2],['…','低速',2],['〜','変速',3],['↔','移動',4],['⇄','逆回転',3],['⚡','加速',5],['小','小型',6],['岩','隕石',2],['☄','流れ星',2]].filter(a=>stage>=a[2]).map(a=>a[0]+a[1]).join('　');
 }
 function omega(){return 2.2+stage*0.12}
+const SEA={},SEOK={};
+for(const f of['SE_jump.mp3','SE_stop.mp3','SE_start.mp3','SE_gole.mp3']){const a=new Audio(f);a.preload='auto';for(const ev of['canplay','canplaythrough','loadedmetadata'])a.addEventListener(ev,()=>{SEOK[f]=true});SEA[f]=a}
+function playSE(f,fb){if(SEOK[f]){try{const a=SEA[f].cloneNode();a.volume=.9;a.play().catch(()=>{})}catch(e){}}else fb()}
 let AC;
 function blip(f,d){try{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.12,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
 function vib(n){try{navigator.vibrate&&navigator.vibrate(n)}catch(e){}}
@@ -127,7 +130,7 @@ function celebrate(q,skip,bend){
   for(let k=0;k<14;k++){const a=Math.random()*6.28,sp=60+Math.random()*120;parts.push({x:P.x,y:P.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,h:q.h})}
   let m='';if(skip>0)m=bend>0.5?'スリングショット！':'近道！';else if(bend>0.5)m='カーブ！';
   if(m)texts.push({t:m,x:q.x,y:q.y-q.r-70,life:1.2});
-  blip(440+skip*160+(bend>.5?120:0),.14);vib(skip>0?30:12);
+  playSE(q.goal?'SE_gole.mp3':'SE_stop.mp3',()=>blip(q.goal?784:440+skip*160+(bend>.5?120:0),q.goal?.3:.14));vib(skip>0?30:12);
 }
 function preview(){
   const sp=pl[cur].type==='boost'?640:400;let x=P.x,y=P.y,vx=-Math.sin(ang)*dir*sp,vy=Math.cos(ang)*dir*sp;
@@ -140,7 +143,7 @@ function release(){
   if(state!=='play'||!P.orbit)return;
   const sp=pl[cur].type==='boost'?640:400;
   P.vx=-Math.sin(ang)*dir*sp;P.vy=Math.cos(ang)*dir*sp;
-  P.orbit=false;ignore=0.25;score++;scrolling=true;relAng=Math.atan2(P.vy,P.vx);blip(520,.06);vib(8);
+  P.orbit=false;ignore=0.25;score++;scrolling=true;relAng=Math.atan2(P.vy,P.vx);playSE(score===1?'SE_start.mp3':'SE_jump.mp3',()=>blip(520,.06));vib(8);
 }
 function showMenu(){
   state='menu';
@@ -160,7 +163,7 @@ function showMenu(){
 }
 function finish(win,msg){
   if(state!=='play')return;
-  state=win?'clear':'over';shake=0.4;blip(win?784:150,.3);vib(win?[20,40,20]:60);
+  state=win?'clear':'over';shake=0.4;if(!win)blip(150,.3);vib(win?[20,40,20]:60);
   let st=0;
   if(win){st=score<=par+1?3:score<=Math.max(par+3,Math.round(N*.8))?2:1;if(st>(prog[stage]||0)){prog[stage]=st;save()}}
   $('t').textContent=win?(stage<NS?'ステージ '+stage+' クリア！':'全ステージ制覇！'):'失敗';
@@ -290,7 +293,7 @@ function draw(){
 prep(1);state='logo';$('ov').classList.add('hide');$('hud').classList.add('hide');
 let logoReady=false;
 setTimeout(()=>{logoReady=true;$('tap').classList.remove('hide')},1000);
-$('logo').addEventListener('click',()=>{if(!logoReady)return;bgmPlay();$('logo').classList.add('hide');$('title').classList.remove('hide');state='title'});
+$('logo').addEventListener('click',()=>{if(!logoReady)return;bgmPlay();for(const f in SEA)SEA[f].load();$('logo').classList.add('hide');$('title').classList.remove('hide');state='title'});
 $('startbtn').addEventListener('click',()=>{$('title').classList.add('hide');showMenu()});
 requestAnimationFrame(loop);
 </script>
