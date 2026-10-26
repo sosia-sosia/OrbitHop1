@@ -119,7 +119,7 @@ function hud(){
 }
 function omega(){return 2.2+stage*0.12}
 const SEA={},SEOK={};
-for(const f of['SE_jump.mp3','SE_stop.mp3','SE_start.mp3','SE_gole.mp3']){const a=new Audio(f);a.preload='auto';for(const ev of['canplay','canplaythrough','loadedmetadata'])a.addEventListener(ev,()=>{SEOK[f]=true});SEA[f]=a}
+for(const f of['SE_jump.mp3','SE_stop.mp3','SE_start.mp3','SE_gole.mp3','SE_out.mp3']){const a=new Audio(f);a.preload='auto';for(const ev of['canplay','canplaythrough','loadedmetadata'])a.addEventListener(ev,()=>{SEOK[f]=true});SEA[f]=a}
 function playSE(f,fb){if(SEOK[f]){try{const a=SEA[f].cloneNode();a.volume=.9;a.play().catch(()=>{})}catch(e){}}else fb()}
 let AC;
 function blip(f,d){try{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.12,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
@@ -163,7 +163,7 @@ function showMenu(){
 }
 function finish(win,msg){
   if(state!=='play')return;
-  state=win?'clear':'over';shake=0.4;if(!win)blip(150,.3);vib(win?[20,40,20]:60);
+  state=win?'clear':'over';shake=0.4;if(!win)playSE('SE_out.mp3',()=>blip(150,.3));vib(win?[20,40,20]:60);
   let st=0;
   if(win){st=score<=par+1?3:score<=Math.max(par+3,Math.round(N*.8))?2:1;if(st>(prog[stage]||0)){prog[stage]=st;save()}}
   $('t').textContent=win?(stage<NS?'ステージ '+stage+' クリア！':'全ステージ制覇！'):'失敗';
