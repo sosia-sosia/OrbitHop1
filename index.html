@@ -103,7 +103,7 @@ function prep(i){
     const lp=pl[k-1],side=k%2?1:-1;
     const ty=pick(i),amp=ty==='mover'?rnd(30,55):0;
     const bx=Math.max(cx-WW/2+50+amp,Math.min(cx+WW/2-50-amp,cx+side*sx+rnd(-jit,jit)));
-    pl.push({type:ty,bx,x:bx,amp,ph:rnd(0,6),y:lp.y-rnd(120,170),r:(ty==='small'?rnd(10,13):rnd(16,28))*(ty==='normal2'?1.2:ty==='normal3'?1.5:1),h:TY[ty].h===undefined?rnd(0,360):TY[ty].h});
+    pl.push({type:ty,bx,x:bx,amp,ph:rnd(0,6),y:lp.y-rnd(120,170),r:(ty==='small'?rnd(10,13):rnd(16,28))*(ty==='normal2'?1.5:ty==='normal3'?2:1),h:TY[ty].h===undefined?rnd(0,360):TY[ty].h});
     if(rng()<rp){const t=rnd(.4,.6),rx=lp.x+(bx-lp.x)*t+rnd(-30,30);items.push({t:'r',bx:rx,x:rx,y:lp.y+(pl[k].y-lp.y)*t,r:rnd(24,36),amp:i>=3&&rng()<.4?rnd(30,60):0,ph:rnd(0,6)})}
   }
   pl[N].goal=true;pl[N].type='goal';pl[N].amp=0;pl[N].x=pl[N].bx;pl[N].r=30;pl[N].h=48;
