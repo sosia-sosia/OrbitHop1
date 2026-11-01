@@ -310,13 +310,14 @@ function draw(){
 prep(1);state='logo';$('ov').classList.add('hide');$('hud').classList.add('hide');
 let logoReady=false;
 setTimeout(()=>{logoReady=true;$('tap').classList.remove('hide')},1000);
-$('logo').addEventListener('click',()=>{if(!logoReady)return;bgmPlay();for(const f in SEA)SEA[f].load();$('logo').classList.add('hide');$('title').classList.remove('hide');state='title'});
-$('startbtn').addEventListener('click',()=>{$('title').classList.add('hide');showMenu()});
-let inactive=false,bgmWas=false;
+$('logo').addEventListener('click',()=>{if(!logoReady)return;TBGM.play().catch(()=>{});for(const f in SEA)SEA[f].load();$('logo').classList.add('hide');$('title').classList.remove('hide');state='title'});
+$('startbtn').addEventListener('click',()=>{bgmPlay();$('title').classList.add('hide');showMenu()});
+const TBGM=new Audio('obit.mp3');TBGM.loop=false;TBGM.volume=.4;
+let inactive=false,bgmWas=false,tWas=false;
 function setActive(a){
   if(a===!inactive)return;inactive=!a;
-  if(a){if(bgmWas&&bgmOn&&bgm)bgm.play().catch(()=>{});if(AC&&AC.resume)AC.resume()}
-  else{bgmWas=!!bgm&&!bgm.paused;if(bgm)bgm.pause();if(AC&&AC.suspend)AC.suspend()}
+  if(a){if(tWas)TBGM.play().catch(()=>{});if(bgmWas&&bgmOn&&bgm)bgm.play().catch(()=>{});if(AC&&AC.resume)AC.resume()}
+  else{tWas=!TBGM.paused;TBGM.pause();bgmWas=!!bgm&&!bgm.paused;if(bgm)bgm.pause();if(AC&&AC.suspend)AC.suspend()}
 }
 document.addEventListener('visibilitychange',()=>setActive(!document.hidden));
 addEventListener('blur',()=>setActive(false));
