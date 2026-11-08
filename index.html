@@ -27,9 +27,7 @@ canvas{position:fixed;top:0;display:block;box-shadow:0 0 40px rgba(0,0,0,.6)}
 #lgt{font-size:40px;font-weight:900;letter-spacing:.12em}
 #tap{position:absolute;bottom:16%;color:var(--dim);font-size:14px;animation:bl 1.2s infinite}
 @keyframes bl{50%{opacity:.25}}
-#title{justify-content:center;gap:5vh;overflow-y:auto;background:rgba(13,16,32,.55);padding:4vh 24px}
-#title>div{flex:0 1 auto;min-height:0}
-#startbtn{flex:0 0 auto}
+#title{justify-content:space-between;background:rgba(13,16,32,.55);padding-top:30%;padding-bottom:14%}
 #title h1{margin:0 0 10px;font-size:40px;font-weight:900;letter-spacing:.04em}
 #title p{margin:0;color:var(--dim)}
 .hide{display:none!important}
@@ -39,7 +37,7 @@ canvas{position:fixed;top:0;display:block;box-shadow:0 0 40px rgba(0,0,0,.6)}
 <canvas id="c"></canvas>
 <div id="hud" class="hide"><div id="score"></div><div id="combo"></div><div id="hint"></div></div>
 <div id="logo" class="scr"><img id="lg" src="Glogo.png" alt="" style="visibility:hidden;width:100%;max-height:50%;object-fit:contain" onload="this.style.visibility='visible'" onerror="this.remove();document.getElementById('lgt').classList.remove('hide')"><div id="lgt" class="hide">ORBIT HOP</div><div id="tap" class="hide">タップして進む</div></div>
-<div id="title" class="scr hide"><div style="width:100%"><img id="ti" src="Gtitle.png" alt="" style="visibility:hidden;width:100%;max-height:40vh;object-fit:contain;display:block" onload="this.style.visibility='visible'" onerror="this.remove();document.getElementById('tit').classList.remove('hide')"><div id="tit" class="hide"><h1>オービット・ホップ</h1><p>惑星をわたって、ゴールをめざせ</p></div></div><button id="startbtn">スタート</button></div>
+<div id="title" class="scr hide"><div style="width:100%"><img id="ti" src="Gtitle.png" alt="" style="visibility:hidden;width:100%;max-height:50vh;object-fit:contain" onload="this.style.visibility='visible'" onerror="this.remove();document.getElementById('tit').classList.remove('hide')"><div id="tit" class="hide"><h1>オービット・ホップ</h1><p>惑星をわたって、ゴールをめざせ</p></div></div><button id="startbtn">スタート</button></div>
 <div id="ov">
   <h1 id="t"></h1>
   <p id="d"></p>
