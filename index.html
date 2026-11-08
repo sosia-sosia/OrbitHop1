@@ -27,7 +27,7 @@ canvas{position:fixed;top:0;display:block;box-shadow:0 0 40px rgba(0,0,0,.6)}
 #lgt{font-size:40px;font-weight:900;letter-spacing:.12em}
 #tap{position:absolute;bottom:16%;color:var(--dim);font-size:14px;animation:bl 1.2s infinite}
 @keyframes bl{50%{opacity:.25}}
-#title{justify-content:center;gap:5vh;overflow-y:auto;background:rgba(13,16,32,.55);padding:4vh 24px}
+#title{justify-content:center;gap:calc(var(--u,8px)*5);overflow-y:auto;background:rgba(13,16,32,.55);padding:calc(var(--u,8px)*4) 24px}
 #title>div{flex:0 1 auto;min-height:0}
 #startbtn{flex:0 0 auto}
 #title h1{margin:0 0 10px;font-size:40px;font-weight:900;letter-spacing:.04em}
@@ -39,7 +39,7 @@ canvas{position:fixed;top:0;display:block;box-shadow:0 0 40px rgba(0,0,0,.6)}
 <canvas id="c"></canvas>
 <div id="hud" class="hide"><div id="score"></div><div id="combo"></div><div id="hint"></div></div>
 <div id="logo" class="scr"><img id="lg" src="Glogo.png" alt="" style="visibility:hidden;width:100%;max-height:50%;object-fit:contain" onload="this.style.visibility='visible'" onerror="this.remove();document.getElementById('lgt').classList.remove('hide')"><div id="lgt" class="hide">ORBIT HOP</div><div id="tap" class="hide">タップして進む</div></div>
-<div id="title" class="scr hide"><div style="width:100%"><img id="ti" src="Gtitle.png" alt="" style="visibility:hidden;width:100%;max-height:40vh;object-fit:contain;display:block" onload="this.style.visibility='visible'" onerror="this.remove();document.getElementById('tit').classList.remove('hide')"><div id="tit" class="hide"><h1>オービット・ホップ</h1><p>惑星をわたって、ゴールをめざせ</p></div></div><button id="startbtn">スタート</button></div>
+<div id="title" class="scr hide"><div style="width:100%"><img id="ti" src="Gtitle.png" alt="" style="visibility:hidden;width:100%;max-height:calc(var(--u,8px)*40);object-fit:contain;display:block" onload="this.style.visibility='visible'" onerror="this.remove();document.getElementById('tit').classList.remove('hide')"><div id="tit" class="hide"><h1>オービット・ホップ</h1><p>惑星をわたって、ゴールをめざせ</p></div></div><button id="startbtn">スタート</button></div>
 <div id="ov">
   <h1 id="t"></h1>
   <p id="d"></p>
@@ -52,7 +52,20 @@ canvas{position:fixed;top:0;display:block;box-shadow:0 0 40px rgba(0,0,0,.6)}
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 const $=id=>document.getElementById(id);
 let W,H,dpr;
-function resize(){dpr=window.devicePixelRatio||1;H=innerHeight;W=Math.min(innerWidth,430,Math.round(H*.56));cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);const l=Math.round((innerWidth-W)/2);cv.style.width=W+'px';cv.style.height=H+'px';cv.style.left=l+'px';for(const id of['ov','hud','logo','title']){const e=document.getElementById(id);e.style.left=l+'px';e.style.right='auto';e.style.width=W+'px'}}
+function resize(){
+  // 論理サイズ(W×H)を固定し、見える範囲＝難易度がウィンドウサイズで変わらないようにする
+  const iw=innerWidth,ih=innerHeight;let s=1;
+  dpr=window.devicePixelRatio||1;
+  if(iw<=430){W=iw;H=Math.min(ih,Math.round(iw*2.4))}   // スマホ: 従来どおり(極端に縦長のときだけ制限)
+  else{W=400;H=Math.round(W*2.17);s=Math.min(iw/W,ih/H)}  // PC: スマホ縦長画面と同じ比率で固定し、全体を拡縮
+  const bw=W*s,bh=H*s,l=Math.round((iw-bw)/2),t=Math.round((ih-bh)/2);
+  cv.width=Math.round(bw*dpr);cv.height=Math.round(bh*dpr);ctx.setTransform(dpr*s,0,0,dpr*s,0,0);
+  cv.style.width=bw+'px';cv.style.height=bh+'px';cv.style.left=l+'px';cv.style.top=t+'px';
+  document.documentElement.style.setProperty('--u',(H/100)+'px');
+  for(const id of['ov','hud','logo','title']){const e=document.getElementById(id);
+    e.style.left=l+'px';e.style.top=t+'px';e.style.right='auto';e.style.bottom='auto';
+    e.style.width=W+'px';e.style.transformOrigin='0 0';e.style.transform=s===1?'':'scale('+s+')';
+    if(id!=='hud')e.style.height=H+'px'}}
 addEventListener('resize',resize);resize();
 
 const NS=10;
